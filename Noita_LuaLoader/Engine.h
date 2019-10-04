@@ -11,7 +11,8 @@ public:
 	virtual void DoFile() = 0;
 
 	// data
-	unsigned char	_unk000[0x18];	// 0008
+	char*			name;			// 0004
+	unsigned char	_unk000[0x14];	// 0008
 	lua_State*		state;			// 001C
 };
 
