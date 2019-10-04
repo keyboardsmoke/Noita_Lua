@@ -293,7 +293,7 @@ namespace GLProxy
 	{
 		auto & glDll = OpenGLDll::getInstance();
 		void * addr = glDll.getFuncPtr(funcName);
-		GLPROXY_LOG("Loading real GL func: (" << ptrToString(addr) << ") " << funcName);
+		//GLPROXY_LOG("Loading real GL func: (" << ptrToString(addr) << ") " << funcName);
 		return addr;
 	}
 
@@ -678,7 +678,7 @@ GLFUNC_8_WRET(BOOL, wglUseFontOutlinesW, HDC, hdc, DWORD, b, DWORD, c, DWORD, d,
 GLPROXY_EXTERN PROC GLPROXY_DECL wglGetProcAddress(LPCSTR funcName)
 {
 	static GLProxy::TGLFunc<PROC, LPCSTR> TGLFUNC_DECL(wglGetProcAddress);
-	GLPROXY_LOG("wglGetProcAddress('" << funcName << "')");
+	//GLPROXY_LOG("wglGetProcAddress('" << funcName << "')");
 	return TGLFUNC_CALL(wglGetProcAddress, funcName);
 }
 
@@ -686,7 +686,7 @@ GLPROXY_EXTERN PROC GLPROXY_DECL wglGetProcAddress(LPCSTR funcName)
 GLPROXY_EXTERN PROC GLPROXY_DECL wglGetDefaultProcAddress(LPCSTR funcName)
 {
 	static GLProxy::TGLFunc<PROC, LPCSTR> TGLFUNC_DECL(wglGetDefaultProcAddress);
-	GLPROXY_LOG("wglGetDefaultProcAddress('" << funcName << "')");
+	//GLPROXY_LOG("wglGetDefaultProcAddress('" << funcName << "')");
 	return TGLFUNC_CALL(wglGetDefaultProcAddress, funcName);
 }
 
