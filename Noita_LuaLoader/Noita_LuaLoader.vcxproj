@@ -132,7 +132,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ModuleDefinitionFile>proxy.def</ModuleDefinitionFile>
-      <OutputFile>C:\Program Files (x86)\Steam\steamapps\common\Noita\$(TargetName)$(TargetExt)</OutputFile>
+      <OutputFile>D:\SteamLibrary\steamapps\common\Noita\$(TargetName)$(TargetExt)</OutputFile>
       <AdditionalDependencies>$(SolutionDir)lib\$(Configuration)\libMinHook.$(PlatformShortName).lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>

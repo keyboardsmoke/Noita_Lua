@@ -100,7 +100,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <OutputFile>C:\Program Files (x86)\Steam\steamapps\common\Noita\$(TargetName)$(TargetExt)</OutputFile>
+      <OutputFile>D:\SteamLibrary\steamapps\common\Noita\$(TargetName)$(TargetExt)</OutputFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">

@@ -2,6 +2,10 @@
 #include "MinHook.h"
 #include "Engine.h"
 
+#define FROM_IDA_ADDRESS(x) (((x) - 0x400000) + (uintptr_t)GetModuleHandle(nullptr))
+
+// 14C578C
+
 lua_pcall_t plua_pcall = nullptr;
 luaL_loadbufferx_t pluaL_loadbufferx = nullptr;
 luaL_loadbuffer_t pluaL_loadbuffer = nullptr;
@@ -10,7 +14,7 @@ int new_luaL_loadbufferx(lua_State *L, const char *buff, size_t sz, const char *
 {
 	// log
 	std::stringstream filename;
-	filename << "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Noita\\mod\\dump\\" << name << ".lua";
+	filename << "C:\\Noita\\mod\\dump\\" << name << ".lua";
 
 	std::ofstream file(filename.str(), std::ifstream::binary);
 	
@@ -27,7 +31,7 @@ int new_luaL_loadbuffer(lua_State *L, const char *buff, size_t sz, const char *n
 {
 	// log
 	std::stringstream filename;
-	filename << "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Noita\\mod\\dump\\" << name << ".lua";
+	filename << "C:\\Noita\\mod\\dump\\" << name << ".lua";
 
 	std::ofstream file(filename.str(), std::ifstream::binary);
 
@@ -83,7 +87,7 @@ bool SetupDumpHook()
 bool LoadLuaScript(LuaStateMgr* mgr)
 {
 	std::stringstream filename;
-	filename << "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Noita\\mod\\main.lua";
+	filename << "C:\\Noita\\mod\\main.lua";
 
 	std::ifstream file(filename.str(), std::ifstream::binary);
 	
@@ -108,7 +112,7 @@ bool LoadLuaScript(LuaStateMgr* mgr)
 
 DWORD WINAPI lpLuaLoader(LPVOID lpParam)
 {
-	GetGlobalLuaManager_t pGetGlobalLuaManager = (GetGlobalLuaManager_t)((uintptr_t)GetModuleHandle(nullptr) + 0xA2B350);
+	GetGlobalLuaManager_t pGetGlobalLuaManager = (GetGlobalLuaManager_t)FROM_IDA_ADDRESS(0xE371B0);
 
 	LuaStateMgr* mgr = nullptr;
 	while (mgr == nullptr)
