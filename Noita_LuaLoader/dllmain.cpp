@@ -2,7 +2,6 @@
 #include "MinHook.h"
 #include "Engine.h"
 
-
 lua_pcall_t plua_pcall = nullptr;
 luaL_loadbufferx_t pluaL_loadbufferx = nullptr;
 luaL_loadbuffer_t pluaL_loadbuffer = nullptr;
