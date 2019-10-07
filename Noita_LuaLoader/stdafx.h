@@ -12,3 +12,6 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
+#include <filesystem>
+
+#define FROM_IDA_ADDRESS(x) (((x) - 0x400000) + (uintptr_t)GetModuleHandle(nullptr))

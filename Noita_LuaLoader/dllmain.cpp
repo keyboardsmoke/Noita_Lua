@@ -1,14 +1,18 @@
 #include "stdafx.h"
 #include "MinHook.h"
 #include "Engine.h"
+#include "WizardFile.h"
 
-#define FROM_IDA_ADDRESS(x) (((x) - 0x400000) + (uintptr_t)GetModuleHandle(nullptr))
-
-// 14C578C
+typedef bool(__thiscall* RunScriptUpdate_t)(void* p_this);
+typedef int(__cdecl* GuiStartFrame_t)(lua_State* L);
 
 lua_pcall_t plua_pcall = nullptr;
 luaL_loadbufferx_t pluaL_loadbufferx = nullptr;
 luaL_loadbuffer_t pluaL_loadbuffer = nullptr;
+RunScriptUpdate_t pRunScriptUpdate = nullptr;
+GuiStartFrame_t pGuiStartFrame = nullptr;
+
+//char __thiscall sub_F54420(float *this)
 
 int new_luaL_loadbufferx(lua_State *L, const char *buff, size_t sz, const char *name, const char *mode)
 {
@@ -44,6 +48,80 @@ int new_luaL_loadbuffer(lua_State *L, const char *buff, size_t sz, const char *n
 	return pluaL_loadbuffer(L, buff, sz, name);
 }
 
+// data/scripts/items/drop_money16x.lua
+
+void DumpScript(const char* name)
+{
+	std::string localFileName = "C:\\Noita\\mod\\dump\\" + std::string(name);
+
+	std::filesystem::path localPath(localFileName);
+	std::filesystem::path parentPath = localPath.parent_path();
+
+	if (!std::filesystem::exists(parentPath))
+	{
+		std::filesystem::create_directory(parentPath);
+	}
+
+	MessageBoxA(0, "Made directory", "OK", MB_OK);
+
+	std::string data;
+	bool contentRead = GetWizardFileContents(name, &data);
+	if (!contentRead)
+	{
+		return;
+	}
+
+	std::ofstream file(localFileName, std::ifstream::binary);
+
+	if (file.is_open())
+	{
+		file.write(data.data(), data.length());
+		file.close();
+	}
+}
+
+void RunDump()
+{
+	//DumpScript("data/credits.txt");
+	DumpScript("data/scripts/items/drop_money16x.lua");
+
+	ExitProcess(0);
+}
+
+bool __fastcall new_RunScriptUpdate(void* p_this)
+{
+	bool ret = pRunScriptUpdate(p_this);
+
+	char buffer[2048] = { 0 };
+
+	// DWORD TlsIndex = *(DWORD*)FROM_IDA_ADDRESS(0x014C79E0);
+	// sprintf_s(buffer, "[%d]", TlsIndex);
+	// MessageBoxA(0, buffer, "TLS INDEX", MB_OK);
+	// 
+	// DWORD dwTlsValue = *(DWORD*)(__readfsdword(0x2Cu) + 4 * TlsIndex);
+	// sprintf_s(buffer, "[%d]", dwTlsValue);
+	// MessageBoxA(0, buffer, "TLS VALUE", MB_OK);
+	// 
+	// DWORD dwTlsPtr = *(DWORD*)(dwTlsValue + 0x11C);
+	// sprintf_s(buffer, "[%d]", dwTlsPtr);
+	// MessageBoxA(0, buffer, "TLS PTR", MB_OK);
+
+	RunDump();
+
+	return ret;
+}
+
+int __cdecl new_GuiStartFrame(lua_State* L)
+{
+	// int __cdecl sub_E9A2D0(int a1)
+
+	int r = pGuiStartFrame(L);
+
+	
+
+	return r;
+}
+
 bool SetupDumpHook()
 {
 	HMODULE hLua = LoadLibraryA("lua51.dll");
@@ -61,7 +139,7 @@ bool SetupDumpHook()
 		return false;
 	}
 
-	auto status = MH_Initialize();
+	MH_STATUS status = MH_Initialize();
 	if (status != MH_OK)
 		return false;
 
@@ -73,11 +151,30 @@ bool SetupDumpHook()
 	if (status != MH_OK)
 		return false;
 
+	LPVOID lpRunScriptUpdate = (LPVOID) FROM_IDA_ADDRESS(0xF54420);
+	LPVOID lpGuiStartFrame = (LPVOID)FROM_IDA_ADDRESS(0x43D2B2);// 0x428380);
+
+	status = MH_CreateHook(lpRunScriptUpdate, (LPVOID)new_RunScriptUpdate, (LPVOID *)&pRunScriptUpdate);
+	if (status != MH_OK)
+		return false;
+
+	status = MH_CreateHook(lpGuiStartFrame, (LPVOID)new_GuiStartFrame, (LPVOID*)&pGuiStartFrame);
+	if (status != MH_OK)
+		return false;
+
 	status = MH_EnableHook((LPVOID)fpluaL_loadbufferx);
 	if (status != MH_OK)
 		return false;
 
 	status = MH_EnableHook((LPVOID)fpluaL_loadbuffer);
+	if (status != MH_OK)
+		return false;
+	
+	status = MH_EnableHook(lpRunScriptUpdate);
+	if (status != MH_OK)
+		return false;
+
+	status = MH_EnableHook(lpGuiStartFrame);
 	if (status != MH_OK)
 		return false;
 
