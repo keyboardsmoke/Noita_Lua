@@ -37,16 +37,14 @@ struct WizardClass
 typedef void (__thiscall *make_std_string_t)(void*, const char* c_str, size_t len);
 typedef WizardClass* (*GetWizardClass_t)();
 typedef int (__thiscall *GetWizardFileContents_t)(void* p_this, void*, void** buffer);
+typedef std::string* (__cdecl* GetWizardFileContents_Simple_t)(const char* filename, uint32_t* buffer);
 
 __declspec(noinline) bool GetWizardFileContents(const char* filename, std::string* data)
 {
-	//volatile make_std_string_t make_std_string = (make_std_string_t)FROM_IDA_ADDRESS(0x004B1CA0);
 	volatile GetWizardClass_t GetWizardClass = (GetWizardClass_t)FROM_IDA_ADDRESS(0x0042F702);
 	volatile GetWizardFileContents_t GetWizardFileContents = (GetWizardFileContents_t)FROM_IDA_ADDRESS(0x00407522);
 	
-	volatile size_t len = strlen(filename);
-
-	std::string str;
+	std::string str = filename;
 	WizardClass* cls = GetWizardClass();
 	volatile void* fs = cls->GetFileSystem();
 

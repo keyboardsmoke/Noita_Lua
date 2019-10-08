@@ -59,16 +59,18 @@ void DumpScript(const char* name)
 
 	if (!std::filesystem::exists(parentPath))
 	{
-		std::filesystem::create_directory(parentPath);
+		std::filesystem::create_directories(parentPath);
 	}
 
-	MessageBoxA(0, "Made directory", "OK", MB_OK);
-
 	std::string data;
-	bool contentRead = GetWizardFileContents(name, &data);
-	if (!contentRead)
+	if (!GetWizardFileContents(name, &data))
 	{
+		MessageBoxA(0, "Failed", "ERROR", MB_OK);
 		return;
+	}
+	else
+	{
+		//MessageBoxA(0, data.c_str(), "CONTENT", MB_OK);
 	}
 
 	std::ofstream file(localFileName, std::ifstream::binary);
@@ -82,8 +84,14 @@ void DumpScript(const char* name)
 
 void RunDump()
 {
-	//DumpScript("data/credits.txt");
+	DumpScript("data/credits.txt");
 	DumpScript("data/scripts/items/drop_money16x.lua");
+	DumpScript("data/global/weather_config.xml");
+	DumpScript("data/scripts/magic/symbol_world_spells.lua");
+	DumpScript("data/scripts/magic/symbol_oneoff_spells.lua");
+	DumpScript("data/global/worldstate_config.xml");
+
+	//DumpScript("temptemp/data_wak_files.txt");
 
 	ExitProcess(0);
 }
