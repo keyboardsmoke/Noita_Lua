@@ -84,32 +84,38 @@ void DumpScript(const char* name)
 
 void RunDump()
 {
-	/*
-	DumpScript("data/credits.txt");
-	DumpScript("data/scripts/items/drop_money16x.lua");
-	DumpScript("data/global/weather_config.xml");
-	DumpScript("data/scripts/magic/symbol_world_spells.lua");
-	DumpScript("data/scripts/magic/symbol_oneoff_spells.lua");
-	DumpScript("data/global/worldstate_config.xml");
-	*/
-
-	// DumpScript("data/scripts/items/shop_effect.lua");
-	// DumpScript("data/entities/misc/sale_indicator.xml");
-	// DumpScript("data/scripts/lib/utilities.lua");
-	//DumpScript("data/scripts/magic/magic_utilities.lua");
-	//DumpScript("data/scripts/items/drop_money.lua");
-	//DumpScript("data/scripts/game_helpers.lua");
-	//DumpScript("");
-	//DumpScript("");
-	//DumpScript("");
-	//DumpScript("");
-
-	//DumpScript("temptemp/data_wak_files.txt");
-
+	//DumpScript("data/scripts/magic/filenames.txt");
 	
+	wizard::FileSystem* fs = wizard::GetFileSystem();
+
+	std::ofstream file("C:\\Noita\\mod\\dump\\file_list.txt", std::ifstream::binary);
+
+	if (file.is_open())
+	{
+		file << "Entries = " << fs->container->pak->list->num_entries << std::endl;
+
+		wizard::WizardPakEntry* entry = &fs->container->pak->list->first;
+
+		for (uint32_t i = 0; i < fs->container->pak->list->num_entries; ++i)
+		{
+			char* fn = new char[entry->stringLength + 1];
+			memset(fn, 0, entry->stringLength + 1);
+			memcpy(fn, entry->filename, entry->stringLength);
+
+			file << fn << std::endl;
+
+			delete[] fn;
+
+			entry = (wizard::WizardPakEntry*)((uintptr_t)entry + offsetof(wizard::WizardPakEntry, filename) + entry->stringLength);
+		}
+
+		file.close();
+	}
+
+	/*
 	//wizard::WizardIterator iter;
 	std::vector<std::string> files;
-	wizard::GetFiles(&files, 1, "data/scripts/lib/");
+	wizard::GetFiles(&files, 1, "data/scripts/");
 
 	std::ofstream file("C:\\Noita\\mod\\dump\\file_list.txt", std::ifstream::binary | std::ifstream::app);
 	file << "SIZE = " << files.size() << std::endl;
@@ -117,9 +123,11 @@ void RunDump()
 	for (size_t i = 0; i < files.size(); ++i)
 	{
 		file << files[i] << std::endl;
+
+		//DumpScript(files[i].c_str());
 	}
 
-	file.close();
+	file.close();*/
 
 	/*
 	if (iter.start != iter.end)
