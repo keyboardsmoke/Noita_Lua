@@ -63,9 +63,9 @@ void DumpScript(const char* name)
 	}
 
 	std::string data;
-	if (!GetWizardFileContents(name, &data))
+	if (!wizard::GetFileContents(name, &data))
 	{
-		MessageBoxA(0, "Failed", "ERROR", MB_OK);
+		//MessageBoxA(0, "Failed", "ERROR", MB_OK);
 		return;
 	}
 	else
@@ -84,14 +84,69 @@ void DumpScript(const char* name)
 
 void RunDump()
 {
+	/*
 	DumpScript("data/credits.txt");
 	DumpScript("data/scripts/items/drop_money16x.lua");
 	DumpScript("data/global/weather_config.xml");
 	DumpScript("data/scripts/magic/symbol_world_spells.lua");
 	DumpScript("data/scripts/magic/symbol_oneoff_spells.lua");
 	DumpScript("data/global/worldstate_config.xml");
+	*/
+
+	// DumpScript("data/scripts/items/shop_effect.lua");
+	// DumpScript("data/entities/misc/sale_indicator.xml");
+	// DumpScript("data/scripts/lib/utilities.lua");
+	//DumpScript("data/scripts/magic/magic_utilities.lua");
+	//DumpScript("data/scripts/items/drop_money.lua");
+	//DumpScript("data/scripts/game_helpers.lua");
+	//DumpScript("");
+	//DumpScript("");
+	//DumpScript("");
+	//DumpScript("");
 
 	//DumpScript("temptemp/data_wak_files.txt");
+
+	
+	//wizard::WizardIterator iter;
+	std::vector<std::string> files;
+	wizard::GetFiles(&files, 1, "data/scripts/lib/");
+
+	std::ofstream file("C:\\Noita\\mod\\dump\\file_list.txt", std::ifstream::binary | std::ifstream::app);
+	file << "SIZE = " << files.size() << std::endl;
+
+	for (size_t i = 0; i < files.size(); ++i)
+	{
+		file << files[i] << std::endl;
+	}
+
+	file.close();
+
+	/*
+	if (iter.start != iter.end)
+	{
+		void* i = iter.start;
+		void* end = iter.end;
+
+		while (true)
+		{
+			std::string value;
+			wizard::GetIteratorValue(&value, i);
+
+			std::ofstream file("C:\\Noita\\mod\\dump\\file_list.txt", std::ifstream::binary | std::ifstream::app);
+			if (file.is_open())
+			{
+				file << value << std::endl;
+				file.close();
+			}
+
+			i = (void *)((uint8_t*)i + 0x18);
+
+			if (i == end)
+			{
+				break;
+			}
+		}
+	}*/
 
 	ExitProcess(0);
 }
@@ -100,7 +155,7 @@ bool __fastcall new_RunScriptUpdate(void* p_this)
 {
 	bool ret = pRunScriptUpdate(p_this);
 
-	char buffer[2048] = { 0 };
+	//char buffer[2048] = { 0 };
 
 	// DWORD TlsIndex = *(DWORD*)FROM_IDA_ADDRESS(0x014C79E0);
 	// sprintf_s(buffer, "[%d]", TlsIndex);
