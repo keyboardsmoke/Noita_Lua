@@ -3,6 +3,7 @@
 #include "Engine.h"
 #include "WizardFile.h"
 
+typedef int(__thiscall* GetWizardFileContents_t)(void* p_this, std::string*, std::string* buffer);
 typedef bool(__thiscall* RunScriptUpdate_t)(void* p_this);
 typedef int(__cdecl* GuiStartFrame_t)(lua_State* L);
 
@@ -11,6 +12,7 @@ luaL_loadbufferx_t pluaL_loadbufferx = nullptr;
 luaL_loadbuffer_t pluaL_loadbuffer = nullptr;
 RunScriptUpdate_t pRunScriptUpdate = nullptr;
 GuiStartFrame_t pGuiStartFrame = nullptr;
+GetWizardFileContents_t pGetWizardFileContents = nullptr;
 
 //char __thiscall sub_F54420(float *this)
 
@@ -50,7 +52,7 @@ int new_luaL_loadbuffer(lua_State *L, const char *buff, size_t sz, const char *n
 
 // data/scripts/items/drop_money16x.lua
 
-void DumpScript(const char* name)
+void DumpFile(const char* name)
 {
 	std::string localFileName = "C:\\Noita\\mod\\dump\\" + std::string(name);
 
@@ -62,8 +64,8 @@ void DumpScript(const char* name)
 		std::filesystem::create_directories(parentPath);
 	}
 
-	std::string data;
-	if (!wizard::GetFileContents(name, &data))
+	std::string* data = new std::string();
+	if (!wizard::GetFileContents(name, data))
 	{
 		//MessageBoxA(0, "Failed", "ERROR", MB_OK);
 		return;
@@ -77,84 +79,31 @@ void DumpScript(const char* name)
 
 	if (file.is_open())
 	{
-		file.write(data.data(), data.length());
+		file.write(data->data(), data->length());
 		file.close();
 	}
 }
 
 void RunDump()
 {
-	//DumpScript("data/scripts/magic/filenames.txt");
-	
 	wizard::FileSystem* fs = wizard::GetFileSystem();
 
-	std::ofstream file("C:\\Noita\\mod\\dump\\file_list.txt", std::ifstream::binary);
+	wizard::WizardPakEntry* entry = &fs->container->pak->list->first;
 
-	if (file.is_open())
+	for (uint32_t i = 0; i < fs->container->pak->list->num_entries; ++i)
 	{
-		file << "Entries = " << fs->container->pak->list->num_entries << std::endl;
+		char* fn = new char[entry->stringLength + 1];
+		memset(fn, 0, entry->stringLength + 1);
+		memcpy(fn, entry->filename, entry->stringLength);
 
-		wizard::WizardPakEntry* entry = &fs->container->pak->list->first;
+		//file << fn << std::endl;
 
-		for (uint32_t i = 0; i < fs->container->pak->list->num_entries; ++i)
-		{
-			char* fn = new char[entry->stringLength + 1];
-			memset(fn, 0, entry->stringLength + 1);
-			memcpy(fn, entry->filename, entry->stringLength);
+		DumpFile(fn);
 
-			file << fn << std::endl;
+		delete[] fn;
 
-			delete[] fn;
-
-			entry = (wizard::WizardPakEntry*)((uintptr_t)entry + offsetof(wizard::WizardPakEntry, filename) + entry->stringLength);
-		}
-
-		file.close();
+		entry = (wizard::WizardPakEntry*)((uintptr_t)entry + offsetof(wizard::WizardPakEntry, filename) + entry->stringLength);
 	}
-
-	/*
-	//wizard::WizardIterator iter;
-	std::vector<std::string> files;
-	wizard::GetFiles(&files, 1, "data/scripts/");
-
-	std::ofstream file("C:\\Noita\\mod\\dump\\file_list.txt", std::ifstream::binary | std::ifstream::app);
-	file << "SIZE = " << files.size() << std::endl;
-
-	for (size_t i = 0; i < files.size(); ++i)
-	{
-		file << files[i] << std::endl;
-
-		//DumpScript(files[i].c_str());
-	}
-
-	file.close();*/
-
-	/*
-	if (iter.start != iter.end)
-	{
-		void* i = iter.start;
-		void* end = iter.end;
-
-		while (true)
-		{
-			std::string value;
-			wizard::GetIteratorValue(&value, i);
-
-			std::ofstream file("C:\\Noita\\mod\\dump\\file_list.txt", std::ifstream::binary | std::ifstream::app);
-			if (file.is_open())
-			{
-				file << value << std::endl;
-				file.close();
-			}
-
-			i = (void *)((uint8_t*)i + 0x18);
-
-			if (i == end)
-			{
-				break;
-			}
-		}
-	}*/
 
 	ExitProcess(0);
 }
@@ -193,6 +142,22 @@ int __cdecl new_GuiStartFrame(lua_State* L)
 	return r;
 }
 
+int __fastcall new_GetWizardFileContents(void* p_this, void* _EDX, std::string* filename, std::string* buffer)
+{
+	std::ofstream file("C:\\Noita\\mod\\dump\\loaded.txt", std::ifstream::binary | std::ifstream::app);
+
+	if (file.is_open())
+	{
+		std::stringstream ss;
+		ss << "File Loaded [" << *filename << "]" << std::endl;
+
+		file.write(ss.str().c_str(), ss.str().length());
+		file.close();
+	}
+
+	return pGetWizardFileContents(p_this, filename, buffer);
+}
+
 bool SetupDumpHook()
 {
 	HMODULE hLua = LoadLibraryA("lua51.dll");
@@ -222,14 +187,9 @@ bool SetupDumpHook()
 	if (status != MH_OK)
 		return false;
 
-	LPVOID lpRunScriptUpdate = (LPVOID) FROM_IDA_ADDRESS(0xF54420);
-	LPVOID lpGuiStartFrame = (LPVOID)FROM_IDA_ADDRESS(0x43D2B2);// 0x428380);
+	LPVOID lpRunScriptUpdate = (LPVOID) FROM_IDA_ADDRESS(0x00F59EE0); // Oct 10
 
 	status = MH_CreateHook(lpRunScriptUpdate, (LPVOID)new_RunScriptUpdate, (LPVOID *)&pRunScriptUpdate);
-	if (status != MH_OK)
-		return false;
-
-	status = MH_CreateHook(lpGuiStartFrame, (LPVOID)new_GuiStartFrame, (LPVOID*)&pGuiStartFrame);
 	if (status != MH_OK)
 		return false;
 
@@ -242,10 +202,6 @@ bool SetupDumpHook()
 		return false;
 	
 	status = MH_EnableHook(lpRunScriptUpdate);
-	if (status != MH_OK)
-		return false;
-
-	status = MH_EnableHook(lpGuiStartFrame);
 	if (status != MH_OK)
 		return false;
 
@@ -280,7 +236,7 @@ bool LoadLuaScript(LuaStateMgr* mgr)
 
 DWORD WINAPI lpLuaLoader(LPVOID lpParam)
 {
-	GetGlobalLuaManager_t pGetGlobalLuaManager = (GetGlobalLuaManager_t)FROM_IDA_ADDRESS(0xE371B0);
+	GetGlobalLuaManager_t pGetGlobalLuaManager = (GetGlobalLuaManager_t)FROM_IDA_ADDRESS(0x00402987); // Oct 10
 
 	LuaStateMgr* mgr = nullptr;
 	while (mgr == nullptr)
@@ -291,7 +247,7 @@ DWORD WINAPI lpLuaLoader(LPVOID lpParam)
 
 	while (true)
 	{
-		if (GetAsyncKeyState(VK_INSERT) & 1)
+		if (GetAsyncKeyState(VK_MBUTTON) & 1)
 		{
 			if (!LoadLuaScript(mgr))
 			{
@@ -321,4 +277,3 @@ BOOL APIENTRY DllMain( HMODULE hModule, DWORD dwReason, LPVOID lpReserved )
 
     return TRUE;
 }
-
